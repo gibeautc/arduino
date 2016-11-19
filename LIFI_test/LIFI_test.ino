@@ -1,61 +1,47 @@
-//#include <OneWire.h>
-//OneWire ds(pin_number);
-#define DS18S20_ID 0x10
-#define DS18B20_ID 0x28
-float temp=5.0;
-
-
-boolean getTemp();
-
+int message=128;
+int rec=0;
+int cor=0;
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
+  blink_test();
+  Serial_setup(300); 
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  if(getTemp){Serial.print("Temp is: ");Serial.println(temp);}
-  else{Serial.println("Error");}
-  delay(2000);  
-}
-
-
-
-//*******getTemp()***********
-boolean getTemp()
+void loop() 
 {
-/*
-  byte i;
-  byte present=0;
-  byte data[12];
-  byte data[8];
+  //TX on 3 
+  //RX on 2
+  delay(200);
 
-  if (!ds.search(addr)){
-    ds.reset_search();
-    return false;
-  }
-  if(OneWire::crc8(addr,7( !=addr[7])
-  {
-    return false;
-  }
-  if(addr[0]!=DS18S20_ID && addr[0]!=DS18B20_ID)
-  {
-    return false;
-  }
-  ds.reset();
-  ds.select(addr);
+  //message++;
+  Serial3.println(message);
+  Serial3.flush();
+  //delay(100);
+  rec=int(Serial2.read());
+  if(rec==message){cor++;}
+  Serial.println(cor);
+  
+}
 
-  ds.write(0x44,1)
-  delay(850);
-  present=ds.reset();
-  ds.select(addr);
-  ds.write(0xBE);
-  for(i=0;i<9;i++)
-  {
-    data[i]=ds.read();
-  }
-  temp=((data[1]<<8)+data[0])*.0625;
-  return true;
-  */
+
+void blink_test()
+{
+  pinMode(14,OUTPUT);
+  digitalWrite(14,LOW);
+  delay(500);
+  pinMode(17,INPUT);
+  //Serial.print("Output off: ");
+  //Serial.println(digitalRead(17));
+  digitalWrite(14,HIGH);
+  delay(500);
+  //Serial.print("Output on: ");
+  //Serial.println(digitalRead(17));
+  
+}
+
+void Serial_setup(long baud)
+{
+  Serial2.begin(baud);
+  Serial3.begin(baud);
 }
 
