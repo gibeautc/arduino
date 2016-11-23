@@ -1,3 +1,5 @@
+#include <SPI.h>
+
 #include <Wire.h>
 #include "DS1631.h"
 #include <EEPROM.h>
@@ -37,6 +39,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(19), Set_Down, FALLING); 
   digitalWrite(8,LOW);
   Serial.begin(9600); //start serial
+  Serial.flush();
   Wire.begin();
   //Serial.print("Startup Config:  ");
   int config=Office_Temp.readConfig();
@@ -80,7 +83,7 @@ void thermostat()
 
 
 void loop() {
-
+  //String input=Serial.read();
   thermostat();
   delay(200);
   

@@ -1,5 +1,5 @@
-//#include <OneWire.h>
-//OneWire ds(pin_number);
+#include <OneWire.h>
+OneWire ds(10);
 #define DS18S20_ID 0x10
 #define DS18B20_ID 0x28
 float temp=5.0;
@@ -24,11 +24,11 @@ void loop() {
 //*******getTemp()***********
 boolean getTemp()
 {
-/*
+
   byte i;
   byte present=0;
   byte data[12];
-  byte data[8];
+  byte addr[8];
 
   if (!ds.search(addr)){
     ds.reset_search();
@@ -45,7 +45,7 @@ boolean getTemp()
   ds.reset();
   ds.select(addr);
 
-  ds.write(0x44,1)
+  ds.write(0x44,1);
   delay(850);
   present=ds.reset();
   ds.select(addr);
@@ -56,6 +56,5 @@ boolean getTemp()
   }
   temp=((data[1]<<8)+data[0])*.0625;
   return true;
-  */
 }
 
