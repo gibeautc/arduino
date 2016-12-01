@@ -9,7 +9,7 @@ volatile float SET;
 OneWire ds(10);  // on pin 10
 DS1631 Office_Temp(0);//init with address of zero
 unsigned long sw_time=0;
-
+float HS=0;
 void Set_Up()
 {
   if(millis()-sw_time>200)
@@ -61,7 +61,7 @@ void thermostat()
   {
     float temp=Office_Temp.readTempOneShot();
     average+=temp;
-    delay(200);
+    delay(100);
   }
   average=average/10.0;
   average=average*1.8;
@@ -69,8 +69,8 @@ void thermostat()
   //Serial.print("Temp is:  ");
   Serial.print(average);
   Serial.print(",");
-  Serial.println(SET);
-  if (average<SET)
+  Serial.print(SET);
+  if (average<SET && HS<125)
   {
     //Serial.println("ON");
     digitalWrite(8,HIGH);
@@ -88,14 +88,14 @@ void loop() {
   //String input=Serial.read();
   thermostat();
   HeatSinkTemp();
-  delay(200);
+  //delay(200);
   
 }
 
 
 void HeatSinkTemp()
 {
-
+int HighByte,LowByte,TReading,SignBit,Tc_100,Whole,Fract;
 byte i;
   byte present = 0;
   byte data[12];
@@ -103,56 +103,47 @@ byte i;
 
   ds.reset_search();
   if ( !ds.search(addr)) {
-      Serial.print("No more addresses.\n");
+      //Serial.print("No more addresses.\n");
       ds.reset_search();
       return;
   }
 
-  Serial.print("R=");
-  for( i = 0; i < 8; i++) {
-    Serial.print(addr[i], HEX);
-    Serial.print(" ");
-  }
-
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.print("CRC is not valid!\n");
-      return;
-  }
-
-  if ( addr[0] == 0x10) {
-      Serial.print("Device is a DS18S20 family device.\n");
-  }
-  else if ( addr[0] == 0x28) {
-      Serial.print("Device is a DS18B20 family device.\n");
-  }
-  else {
-      Serial.print("Device family is not recognized: 0x");
-      Serial.println(addr[0],HEX);
-      return;
-  }
+  if ( OneWire::crc8( addr, 7) != addr[7]) {return;}
+  if ( addr[0] == 0x10) {}
+  else if ( addr[0] == 0x28) {}
+  else {return;}
 
   ds.reset();
   ds.select(addr);
   ds.write(0x44,1);         // start conversion, with parasite power on at the end
-
-  delay(1000);     // maybe 750ms is enough, maybe not
+  delay(750);     // maybe 750ms is enough, maybe not
   // we might do a ds.depower() here, but the reset will take care of it.
-
   present = ds.reset();
   ds.select(addr);    
   ds.write(0xBE);         // Read Scratchpad
-
-  Serial.print("P=");
-  Serial.print(present,HEX);
-  Serial.print(" ");
   for ( i = 0; i < 9; i++) {           // we need 9 bytes
     data[i] = ds.read();
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
   }
-  Serial.print(" CRC=");
-  Serial.print( OneWire::crc8( data, 8), HEX);
-  Serial.println();
-
+  LowByte=data[0];
+  HighByte=data[1];
+  TReading=(HighByte<<8)+LowByte;
+  SignBit=TReading&0x8000;
+  if(SignBit)
+  {
+    TReading=(TReading ^ 0xffff)+1;
+  }
+  Tc_100=(6*TReading)+TReading/4;
+  Whole=Tc_100/100;
+  Fract=Tc_100%100;
+float HSTemp=((float)Tc_100)/100;
+HSTemp=HSTemp*1.8;
+  HSTemp=HSTemp+32;
+if(SignBit)
+{
+  HSTemp=HSTemp*-1;
 }
-
+Serial.print(",");
+Serial.print(HSTemp);
+Serial.println(",125");
+HS=HSTemp;
+}
